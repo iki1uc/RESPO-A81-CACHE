@@ -1,37 +1,30 @@
 <!DOCTYPE html>
-<html>
+<html lang="de">
 <head>
 <meta charset="UTF-8">
-<title>A81-Axis · ID · QI/IQQ/OCTA</title>
+<title>ID · RESPO‑A81‑CACHE</title>
 
 <style>
-body { background:#000; color:#0f0; font-family:monospace; text-align:center; padding:40px; }
-#cube { width:360px; height:360px; margin:auto; position:relative; }
-.cell {
-    width:30px; height:30px;
-    background:#0f0; border:1px solid #333;
-    position:absolute;
-}
+body{background:#000;color:#0f0;font-family:monospace;padding:40px;}
+pre{background:#111;border-left:3px solid #6cf;padding:12px;}
 </style>
 </head>
 
 <body>
 
-<h1>A81-Axis · ID · QI/IQQ/OCTA</h1>
-<div id="cube"></div>
+<h1>ID · RESPO‑A81‑CACHE</h1>
+
+<pre>
+System: RESPO‑A81‑CACHE
+Layer: CACHE
+Achse: A81
+Pipeline: 3/6/9/12
+Status: aktiv
+Timestamp: <span id="ts"></span>
+</pre>
 
 <script>
-const cube = document.getElementById("cube");
-
-for(let r=0; r<9; r++){
-    for(let c=0; c<9; c++){
-        const cell = document.createElement("div");
-        cell.className = "cell";
-        cell.style.left = (c*40)+"px";
-        cell.style.top  = (r*40)+"px";
-        cube.appendChild(cell);
-    }
-}
+document.getElementById("ts").innerText = Date.now();
 </script>
 
 </body>
