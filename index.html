@@ -2,31 +2,63 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<title>RESPO‑A81‑CACHE · Monitor</title>
+<title>A81 · RESPO-System · 100 · 360 · CACHE</title>
 
 <style>
 body{background:#000;color:#0f0;font-family:monospace;padding:40px;}
-button{background:#111;color:#0f0;border:1px solid #333;padding:10px 20px;margin-bottom:10px;}
-pre{background:#111;border-left:3px solid #6cf;padding:12px;}
+h1{color:#6cf;text-align:center;margin-bottom:30px;}
+button{background:#111;color:#0f0;border:1px solid #333;padding:10px 20px;margin:10px 0;}
+pre{background:#111;border-left:3px solid #6cf;padding:20px;white-space:pre-wrap;}
+.block{margin-bottom:30px;}
 </style>
+
+<script type="module">
+import { buildRespo100 } from "./respo100.js";
+import { buildRespo360 } from "./respo360.js";
+import { buildDashboard } from "./respoDashboard.js";
+import { A81CACHE } from "./81cache.js";
+
+window.runA81 = () => {
+
+    // RESPO-Schichten erzeugen
+    const r100 = buildRespo100();
+    const r360 = buildRespo360();
+
+    // Dashboard erzeugen
+    const dash = buildDashboard(r100, r360);
+
+    // Cache schreiben
+    A81CACHE.write({
+        respo100: r100,
+        respo360: r360,
+        dashboard: dash,
+        timestamp: Date.now()
+    });
+
+    // Ausgabe
+    document.getElementById("out").innerText =
+        JSON.stringify({
+            a81_axis: "ACTIVE",
+            respo100: r100,
+            respo360: r360,
+            dashboard: dash,
+            cache: A81CACHE.read(),
+            fusion: "A81-Axis → RESPO-100 → RESPO-360 → CACHE → Dashboard",
+            timestamp: Date.now()
+        }, null, 2);
+};
+</script>
+
 </head>
 
 <body>
 
-<h1>RESPO‑A81‑CACHE · Monitor</h1>
+<h1>A81-Axis · RESPO-100 · RESPO-360 · CACHE</h1>
 
-<button onclick="runCache()">CACHE lesen</button>
-<pre id="out">Bereit…</pre>
-
-<script type="module">
-import { A81CACHE } from "./81cache.js";
-
-window.runCache = function(){
-    const out = A81CACHE.read();
-    document.getElementById("out").textContent =
-        JSON.stringify(out, null, 2);
-};
-</script>
+<div class="block">
+    <button onclick="runA81()">A81-System starten</button>
+    <pre id="out">Bereit…</pre>
+</div>
 
 </body>
 </html>
