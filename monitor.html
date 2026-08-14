@@ -1,0 +1,14 @@
+import { NC_CORE } from "./NC_CORE.js";
+   
+window.runNC = () => {
+    const out = NC_CORE.init(
+        C81.init(),
+        RESPO_Whirl.init(),
+        PQ243.measure(),
+        A81CACHE.read(),
+        Operator9.init(),
+        GEO.analyze(C81.init())
+    );
+
+    outNC.textContent = JSON.stringify(out, null, 2);
+};
