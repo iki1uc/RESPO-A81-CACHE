@@ -93,3 +93,4 @@ class A81_AXIS {
 }
 
 window.A81_AXIS = new A81_AXIS();
+NC_CORE.operator9 = this;
