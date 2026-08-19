@@ -2,161 +2,391 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<title>A81 · RESPO-System · FULL CORE · CHAOS</title>
+<title>A81 · RESPO-System · FULL CORE · LÄUFER</title>
 
 <style>
-body{background:#000;color:#0f0;font-family:monospace;padding:40px;}
-h1{color:#6cf;text-align:center;margin-bottom:30px;}
-button{background:#111;color:#0f0;border:1px solid #333;padding:10px 20px;margin:10px 0;}
-pre{background:#111;border-left:3px solid #6cf;padding:20px;white-space:pre-wrap;}
-.block{margin-bottom:30px;}
-#chaos{background:#0a0a0f;border:1px solid #333;border-radius:8px;padding:20px;margin-top:20px;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{
+    background:#000;
+    color:#0f0;
+    font-family:monospace;
+    padding:40px;
+    min-height:100vh;
+}
+h1{
+    color:#6cf;
+    text-align:center;
+    margin-bottom:30px;
+    letter-spacing:4px;
+    text-shadow:0 0 20px rgba(102,204,255,0.2);
+}
+.container{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:20px;
+    max-width:1200px;
+    margin:0 auto;
+}
+.box{
+    background:#0a0a0f;
+    border:1px solid #1a1a2a;
+    border-radius:12px;
+    padding:20px;
+    transition:all 0.3s;
+}
+.box:hover{
+    border-color:#6cf;
+    box-shadow:0 0 30px rgba(102,204,255,0.05);
+}
+.box h3{
+    color:#6cf;
+    font-size:12px;
+    text-transform:uppercase;
+    letter-spacing:2px;
+    margin-bottom:15px;
+    border-bottom:1px solid #1a1a2a;
+    padding-bottom:8px;
+}
+.button-group{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    margin-bottom:15px;
+}
+button{
+    background:#111;
+    color:#0f0;
+    border:1px solid #333;
+    padding:10px 18px;
+    border-radius:6px;
+    cursor:pointer;
+    font-family:monospace;
+    font-size:11px;
+    transition:all 0.2s;
+    flex:1;
+    min-width:80px;
+}
+button:hover{
+    background:#1a1a2a;
+    border-color:#6cf;
+    color:#6cf;
+    box-shadow:0 0 20px rgba(102,204,255,0.1);
+}
+button:active{
+    transform:scale(0.95);
+}
+button.chaos{ border-color:#f4f; color:#f4f; }
+button.chaos:hover{ background:#f4f; color:#000; }
+
+button.a81{ border-color:#4ff; color:#4ff; }
+button.a81:hover{ background:#4ff; color:#000; }
+
+button.nc{ border-color:#ff4; color:#ff4; }
+button.nc:hover{ background:#ff4; color:#000; }
+
+button.respo{ border-color:#4f4; color:#4f4; }
+button.respo:hover{ background:#4f4; color:#000; }
+
+button.monitor{ border-color:#6cf; color:#6cf; }
+button.monitor:hover{ background:#6cf; color:#000; }
+
+button.auto{ border-color:#ffd700; color:#ffd700; }
+button.auto:hover{ background:#ffd700; color:#000; }
+
+pre{
+    background:#06060a;
+    border-left:3px solid #6cf;
+    padding:15px;
+    border-radius:4px;
+    font-size:10px;
+    line-height:1.6;
+    min-height:120px;
+    max-height:300px;
+    overflow-y:auto;
+    color:#6a6a8a;
+    white-space:pre-wrap;
+    word-break:break-all;
+}
+#chaos{
+    grid-column:1 / -1;
+    background:#0a0a0f;
+    border:1px solid #1a1a2a;
+    border-radius:12px;
+    padding:20px;
+    margin-top:10px;
+    min-height:100px;
+}
+#chaos h3{
+    color:#f4f;
+    font-size:12px;
+    text-transform:uppercase;
+    letter-spacing:2px;
+    margin-bottom:15px;
+    border-bottom:1px solid #1a1a2a;
+    padding-bottom:8px;
+}
+#chaos pre{
+    border-left-color:#f4f;
+    color:#6a6a8a;
+}
+.status{
+    display:flex;
+    gap:20px;
+    justify-content:center;
+    padding:10px;
+    font-size:10px;
+    color:#444;
+}
+.status .online{ color:#4f4; }
+.status .chaos-active{ color:#f4f; }
+
+@media(max-width:800px){
+    body{padding:20px;}
+    .container{grid-template-columns:1fr;}
+}
 </style>
-
-<script type="module">
-
-// ─── RESPO-Schichten ───
-import { buildRespo100 } from "./respo100.js";
-import { buildRespo360 } from "./respo360.js";
-import { buildDashboard } from "./respoDashboard.js";
-
-// ─── A81 Cache ───
-import { A81CACHE } from "./81cache.js";
-
-// ─── C81 Kernel ───
-import { C81 } from "./81.room";
-
-// ─── GEO ───
-import { GEO } from "./81geo.js";
-
-// ─── 9×9 Operator ───
-import { Operator9 } from "./9×9.js";
-
-// ─── NC-Core ───
-import { NC_CORE } from "./NC_CORE.js";
-
-// ─── CHAOS-Module ───
-import { ChaosViewport } from "./ChaosViewport.js";
-import { A81Chaos } from "./A81Chaos.js";
-import { NCCoreChaos } from "./NCCoreChaos.js";
-import { RespoChaosDashboard } from "./RespoChaosDashboard.js";
-
-// ─── Chaos Cycle ───
-const chaosModules = [
-    ChaosViewport,
-    A81Chaos,
-    NCCoreChaos,
-    RespoChaosDashboard
-];
-
-let chaosIndex = 0;
-let chaosInterval = null;
-
-function renderChaos(target){
-    const mod = chaosModules[chaosIndex];
-    mod.render(target);
-    chaosIndex = (chaosIndex + 1) % chaosModules.length;
-}
-
-function startChaosCycle(target, intervalMs = 3000){
-    renderChaos(target);
-    if(chaosInterval) clearInterval(chaosInterval);
-    chaosInterval = setInterval(() => renderChaos(target), intervalMs);
-}
-
-function stopChaosCycle(){
-    if(chaosInterval){
-        clearInterval(chaosInterval);
-        chaosInterval = null;
-    }
-}
-
-// ─── MONITOR ───
-window.runMonitor = () => {
-
-    const r100 = buildRespo100();
-    const r360 = buildRespo360();
-    const dash = buildDashboard(r100, r360);
-
-    const c81 = C81.init();
-    const geo = GEO.analyze(c81);
-    const op9 = Operator9.init();
-    const pq243 = run243();
-
-    const nc = NC_CORE.init(
-        c81,
-        r360,
-        pq243,
-        A81CACHE.read(),
-        op9,
-        geo
-    );
-
-    A81CACHE.write({
-        respo100: r100,
-        respo360: r360,
-        dashboard: dash,
-        c81,
-        geo,
-        operator9: op9,
-        pq243,
-        nc,
-        timestamp: Date.now()
-    });
-
-    document.getElementById("out").innerText =
-        JSON.stringify({
-            monitor: "ACTIVE",
-            respo100: r100,
-            respo360: r360,
-            dashboard: dash,
-            c81,
-            geo,
-            operator9: op9,
-            pq243,
-            nc,
-            cache: A81CACHE.read(),
-            fusion: "MONITOR → A81CACHE → NC → 243 → GEO → 9×9 → C81 → RESPO",
-            timestamp: Date.now()
-        }, null, 2);
-};
-
-// ─── CHAOS-STEUERUNG ───
-window.startChaos = () => {
-    const target = document.getElementById("chaos");
-    startChaosCycle(target, 3000);
-    document.getElementById("chaos-status").innerText = "● CHAOS läuft";
-};
-
-window.stopChaos = () => {
-    stopChaosCycle();
-    document.getElementById("chaos-status").innerText = "● CHAOS gestoppt";
-};
-
-// ─── AUTO-START ───
-setTimeout(() => {
-    window.startChaos();
-}, 500);
-
-</script>
-
 </head>
-
 <body>
 
-<h1>A81 · RESPO-System · FULL CORE · CHAOS</h1>
+<h1>✦ A81 · RESPO · FULL CORE · LÄUFER ✦</h1>
 
-<div class="block">
-    <button onclick="runMonitor()">MONITOR starten</button>
-    <button onclick="startChaos()">🌀 CHAOS starten</button>
-    <button onclick="stopChaos()">⏹ CHAOS stoppen</button>
-    <span id="chaos-status" style="color:#6cf;margin-left:20px;">● initialisiere…</span>
-    <pre id="out">Bereit…</pre>
+<div class="status">
+    <span>🟢 <span class="online">SYSTEM ONLINE</span></span>
+    <span>🌀 <span id="chaos-status-text" class="chaos-active">CHAOS AKTIV</span></span>
+    <span>⏱️ <span id="clock">--:--:--</span></span>
 </div>
 
-<div id="chaos">
-    <!-- Chaos-Module werden hier gerendert -->
+<div class="container">
+
+    <!-- CHAOS -->
+    <div class="box">
+        <h3>🌀 CHAOS · TRIGGER</h3>
+        <div class="button-group">
+            <button class="chaos" onclick="chaosAction()">⚡ Chaos</button>
+        </div>
+        <pre id="chaos-out">Bereit…</pre>
+    </div>
+
+    <!-- A81 -->
+    <div class="box">
+        <h3>🔮 A81 · ACHSE</h3>
+        <div class="button-group">
+            <button class="a81" onclick="a81Action()">🌀 A81</button>
+        </div>
+        <pre id="a81-out">Bereit…</pre>
+    </div>
+
+    <!-- NC_CORE -->
+    <div class="box">
+        <h3>⚡ NC_CORE · FUSION</h3>
+        <div class="button-group">
+            <button class="nc" onclick="ncAction()">🔗 NC</button>
+        </div>
+        <pre id="nc-out">Bereit…</pre>
+    </div>
+
+    <!-- RESPO -->
+    <div class="box">
+        <h3>🎯 RESPO · DUAL</h3>
+        <div class="button-group">
+            <button class="respo" onclick="respoAction()">📊 RESPO</button>
+        </div>
+        <pre id="respo-out">Bereit…</pre>
+    </div>
+
+    <!-- MONITOR + AUTO -->
+    <div class="box" style="grid-column:1 / -1;">
+        <h3>🖥️ MONITOR · SYSTEM</h3>
+        <div class="button-group">
+            <button class="monitor" onclick="monitorAction()">📡 MONITOR</button>
+            <button class="auto" onclick="toggleAuto()">▶ AUTO</button>
+            <button onclick="clearAll()">⟲ CLEAR</button>
+        </div>
+        <pre id="monitor-out">Bereit…</pre>
+    </div>
+
+    <!-- CHAOS VIEWPORT -->
+    <div id="chaos">
+        <h3>🌀 CHAOS · VIEWPORT</h3>
+        <div id="chaos-viewport">
+            <pre>🔄 Chaos-Viewport lädt…</pre>
+        </div>
+    </div>
+
 </div>
+
+<script>
+// ─── CLOCK ───
+function updateClock(){
+    document.getElementById('clock').textContent = new Date().toLocaleTimeString();
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// ─── OUTPUT HELPER ───
+function setOutput(id, data){
+    document.getElementById(id).innerText = JSON.stringify(data, null, 2);
+}
+
+// ─── 1. CHAOS ───
+function chaosPulse(){
+    return {
+        drift: Math.random().toFixed(5),
+        flux: (Math.random()*9).toFixed(5),
+        noise: (Math.random()*3).toFixed(5),
+        tick: Date.now()
+    };
+}
+window.chaosAction = () => {
+    setOutput('chaos-out', chaosPulse());
+};
+
+// ─── 2. A81 ───
+function a81Pulse(){
+    const Phi = Math.random();
+    const phi = Math.random();
+    const inf = Math.random();
+    return {
+        Phi: Phi.toFixed(4),
+        phi: phi.toFixed(4),
+        inf: inf.toFixed(4),
+        lage: {
+            x: (Phi*9).toFixed(3),
+            y: (phi*9).toFixed(3),
+            z: (inf*9).toFixed(3)
+        },
+        tick: Date.now()
+    };
+}
+window.a81Action = () => {
+    setOutput('a81-out', a81Pulse());
+};
+
+// ─── 3. NC_CORE ───
+function ncPulse(){
+    return {
+        fusion: "NC + A81 + RESPO + 243 + GEO + 9×9",
+        chaos: Math.random().toFixed(4),
+        mode: "CHAOS",
+        tick: Date.now()
+    };
+}
+window.ncAction = () => {
+    setOutput('nc-out', ncPulse());
+};
+
+// ─── 4. RESPO ───
+function respoPulse(){
+    return {
+        r100: Math.floor(Math.random()*100),
+        r360: Math.floor(Math.random()*360),
+        mode: "CHAOS-DUAL",
+        level: (Math.random()*100).toFixed(2) + "%",
+        tick: Date.now()
+    };
+}
+window.respoAction = () => {
+    setOutput('respo-out', respoPulse());
+};
+
+// ─── 5. MONITOR ───
+window.monitorAction = () => {
+    setOutput('monitor-out', {
+        system: "A81 · RESPO · FULL CORE",
+        status: "ONLINE",
+        chaos: Math.random().toFixed(4),
+        nc: "FUSION",
+        respo: "DUAL",
+        timestamp: Date.now()
+    });
+};
+
+// ─── 6. AUTO ───
+let autoInterval = null;
+let autoRunning = false;
+
+window.toggleAuto = () => {
+    const btn = document.querySelector('.auto');
+    if(autoRunning){
+        clearInterval(autoInterval);
+        autoRunning = false;
+        btn.textContent = '▶ AUTO';
+        btn.style.borderColor = '#ffd700';
+        document.getElementById('chaos-status-text').textContent = 'AUTO PAUSIERT';
+        document.getElementById('chaos-status-text').style.color = '#ffd700';
+        return;
+    }
+
+    autoRunning = true;
+    btn.textContent = '⏹ STOP';
+    btn.style.borderColor = '#f44';
+
+    const actions = [
+        () => window.chaosAction(),
+        () => window.a81Action(),
+        () => window.ncAction(),
+        () => window.respoAction(),
+        () => window.monitorAction()
+    ];
+
+    let idx = 0;
+    autoInterval = setInterval(() => {
+        actions[idx]();
+        idx = (idx + 1) % actions.length;
+    }, 1500);
+
+    document.getElementById('chaos-status-text').textContent = 'AUTO LÄUFT';
+    document.getElementById('chaos-status-text').style.color = '#4f4';
+};
+
+// ─── 7. CLEAR ───
+window.clearAll = () => {
+    document.getElementById('chaos-out').innerText = 'Bereit…';
+    document.getElementById('a81-out').innerText = 'Bereit…';
+    document.getElementById('nc-out').innerText = 'Bereit…';
+    document.getElementById('respo-out').innerText = 'Bereit…';
+    document.getElementById('monitor-out').innerText = 'Bereit…';
+};
+
+// ─── CHAOS-VIEWPORT ───
+const chaosViewport = document.getElementById('chaos-viewport');
+
+function renderChaosViewport(){
+    const Phi = Math.random();
+    const phi = Math.random();
+    const inf = Math.random();
+    chaosViewport.innerHTML = `
+        <pre>
+🌀 CHAOS · LIVE
+─────────────────
+Δ Drift:   ${(Math.random()*3).toFixed(5)}
+Φ Flux:    ${(Math.random()*9).toFixed(5)}
+Ω Noise:   ${(Math.random()*3).toFixed(5)}
+─────────────────
+Phi:       ${Phi.toFixed(4)}
+phi:       ${phi.toFixed(4)}
+∞:         ${inf.toFixed(4)}
+─────────────────
+LAGE:
+  x = ${(Phi*9).toFixed(3)}
+  y = ${(phi*9).toFixed(3)}
+  z = ${(inf*9).toFixed(3)}
+─────────────────
+⏱️ ${new Date().toLocaleTimeString()}
+        </pre>
+    `;
+}
+
+// Chaos-Viewport alle 2 Sekunden updaten
+setInterval(renderChaosViewport, 2000);
+renderChaosViewport();
+
+// ─── INIT ───
+console.log('✦ A81 · RESPO · FULL CORE · LÄUFER ✦');
+console.log('🔘 Buttons: Chaos, A81, NC, RESPO, MONITOR, AUTO, CLEAR');
+console.log('🌀 Chaos-Viewport läuft automatisch');
+
+</script>
 
 </body>
 </html>
