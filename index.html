@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<title>A81 · RESPO-System · FULL CORE</title>
+<title>A81 · RESPO-System · FULL CORE · CHAOS</title>
 
 <style>
 body{background:#000;color:#0f0;font-family:monospace;padding:40px;}
@@ -10,28 +10,153 @@ h1{color:#6cf;text-align:center;margin-bottom:30px;}
 button{background:#111;color:#0f0;border:1px solid #333;padding:10px 20px;margin:10px 0;}
 pre{background:#111;border-left:3px solid #6cf;padding:20px;white-space:pre-wrap;}
 .block{margin-bottom:30px;}
+#chaos{background:#0a0a0f;border:1px solid #333;border-radius:8px;padding:20px;margin-top:20px;}
 </style>
 
 <script type="module">
 
-// RESPO-Schichten
+// ─── RESPO-Schichten ───
 import { buildRespo100 } from "./respo100.js";
 import { buildRespo360 } from "./respo360.js";
 import { buildDashboard } from "./respoDashboard.js";
 
-// A81 Cache
+// ─── A81 Cache ───
 import { A81CACHE } from "./81cache.js";
 
-// C81 Kernel
+// ─── C81 Kernel ───
 import { C81 } from "./81.room";
 
-// GEO
+// ─── GEO ───
 import { GEO } from "./81geo.js";
 
-// 9×9 Operator
+// ─── 9×9 Operator ───
 import { Operator9 } from "./9×9.js";
 
-// NC-Core
+// ─── NC-Core ───
 import { NC_CORE } from "./NC_CORE.js";
 
-//
+// ─── CHAOS-Module ───
+import { ChaosViewport } from "./ChaosViewport.js";
+import { A81Chaos } from "./A81Chaos.js";
+import { NCCoreChaos } from "./NCCoreChaos.js";
+import { RespoChaosDashboard } from "./RespoChaosDashboard.js";
+
+// ─── Chaos Cycle ───
+const chaosModules = [
+    ChaosViewport,
+    A81Chaos,
+    NCCoreChaos,
+    RespoChaosDashboard
+];
+
+let chaosIndex = 0;
+let chaosInterval = null;
+
+function renderChaos(target){
+    const mod = chaosModules[chaosIndex];
+    mod.render(target);
+    chaosIndex = (chaosIndex + 1) % chaosModules.length;
+}
+
+function startChaosCycle(target, intervalMs = 3000){
+    renderChaos(target);
+    if(chaosInterval) clearInterval(chaosInterval);
+    chaosInterval = setInterval(() => renderChaos(target), intervalMs);
+}
+
+function stopChaosCycle(){
+    if(chaosInterval){
+        clearInterval(chaosInterval);
+        chaosInterval = null;
+    }
+}
+
+// ─── MONITOR ───
+window.runMonitor = () => {
+
+    const r100 = buildRespo100();
+    const r360 = buildRespo360();
+    const dash = buildDashboard(r100, r360);
+
+    const c81 = C81.init();
+    const geo = GEO.analyze(c81);
+    const op9 = Operator9.init();
+    const pq243 = run243();
+
+    const nc = NC_CORE.init(
+        c81,
+        r360,
+        pq243,
+        A81CACHE.read(),
+        op9,
+        geo
+    );
+
+    A81CACHE.write({
+        respo100: r100,
+        respo360: r360,
+        dashboard: dash,
+        c81,
+        geo,
+        operator9: op9,
+        pq243,
+        nc,
+        timestamp: Date.now()
+    });
+
+    document.getElementById("out").innerText =
+        JSON.stringify({
+            monitor: "ACTIVE",
+            respo100: r100,
+            respo360: r360,
+            dashboard: dash,
+            c81,
+            geo,
+            operator9: op9,
+            pq243,
+            nc,
+            cache: A81CACHE.read(),
+            fusion: "MONITOR → A81CACHE → NC → 243 → GEO → 9×9 → C81 → RESPO",
+            timestamp: Date.now()
+        }, null, 2);
+};
+
+// ─── CHAOS-STEUERUNG ───
+window.startChaos = () => {
+    const target = document.getElementById("chaos");
+    startChaosCycle(target, 3000);
+    document.getElementById("chaos-status").innerText = "● CHAOS läuft";
+};
+
+window.stopChaos = () => {
+    stopChaosCycle();
+    document.getElementById("chaos-status").innerText = "● CHAOS gestoppt";
+};
+
+// ─── AUTO-START ───
+setTimeout(() => {
+    window.startChaos();
+}, 500);
+
+</script>
+
+</head>
+
+<body>
+
+<h1>A81 · RESPO-System · FULL CORE · CHAOS</h1>
+
+<div class="block">
+    <button onclick="runMonitor()">MONITOR starten</button>
+    <button onclick="startChaos()">🌀 CHAOS starten</button>
+    <button onclick="stopChaos()">⏹ CHAOS stoppen</button>
+    <span id="chaos-status" style="color:#6cf;margin-left:20px;">● initialisiere…</span>
+    <pre id="out">Bereit…</pre>
+</div>
+
+<div id="chaos">
+    <!-- Chaos-Module werden hier gerendert -->
+</div>
+
+</body>
+</html>
